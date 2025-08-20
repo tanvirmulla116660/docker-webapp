@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         DOCKER_REPO = "tanvirmulla11/webapp"
-        DOCKER_IMAGE = "${DOCKER_REPO}:${BUILD_NUMBER}"
     }
 
     stages {
@@ -15,18 +14,23 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${DOCKER_IMAGE} ."
+                script {
+                    DOCKER_IMAGE = "${DOCKER_REPO}:${BUILD_NUMBER}"
+                    sh "docker build -t ${DOCKER_IMAGE} ."
+                }
             }
         }
-    }
 
-    post {
-        success {
-            withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                sh """
-                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    docker push ${DOCKER_IMAGE}
-                """
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh """
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push ${DOCKER_REPO}:${BUILD_NUMBER}
+                        docker tag ${DOCKER_REPO}:${BUILD_NUMBER} ${DOCKER_REPO}:latest
+                        docker push ${DOCKER_REPO}:latest
+                    """
+                }
             }
         }
     }
