@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_REPO = "yourname/webapp"
+        DOCKER_REPO = "tanvirmulla11/webapp"
         DOCKER_IMAGE = "${DOCKER_REPO}:${BUILD_NUMBER}"
     }
 
